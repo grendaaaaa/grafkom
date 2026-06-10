@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #f7f9f2; /* Sangat terang, lebih bersih dari sekadar solid cream */
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(82, 45%, 90%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(140, 25%, 85%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(186, 45%, 85%, 1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(82, 45%, 90%, 1) 0px, transparent 50%);
+    color: #1d4d52; /* palette-teal sangat gelap */
+    margin: 0;
+    font-family: 'Outfit', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  /* Styling khusus font monospace untuk angka dan rumus agar presisi */
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  }
+}
+
+/* Kustomisasi scrollbar agar lebih modern dan estetik */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #E6EEC9; 
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #7DA78C; 
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #35858E; 
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px 0 rgba(125, 167, 140, 0.15);
+}
