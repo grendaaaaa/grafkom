@@ -4,17 +4,27 @@ import type { CalculationStep } from '../types';
  * Lingkaran — Persamaan Parametrik:
  *   x = xc + r · cos(θ)
  *   y = yc + r · sin(θ)
+ *
+ * FIX BUG-04: Guard deltaTheta <= 0 → return empty (cegah infinite loop)
+ * FIX BUG-09: Integer-based loop (i * deltaTheta) ganti float accumulation
+ *             untuk memastikan titik terakhir menutup ke titik pertama.
  */
 export const generateCircleSteps = (
   xc: number, yc: number, r: number, deltaTheta: number
 ): CalculationStep[] => {
+  // BUG-04: deltaTheta <= 0 akan menyebabkan infinite loop
+  if (deltaTheta <= 0) return [];
+
   const steps: CalculationStep[] = [];
-  let iteration = 0;
-  for (let theta = 0; theta <= 2 * Math.PI + 0.001; theta += deltaTheta) {
+  // BUG-09: gunakan integer i agar tidak ada float accumulation error
+  const totalSteps = Math.ceil(2 * Math.PI / deltaTheta);
+
+  for (let i = 0; i <= totalSteps; i++) {
+    const theta = i * deltaTheta; // presisi lebih baik dari: theta += deltaTheta
     const cosT = Math.cos(theta);
     const sinT = Math.sin(theta);
     steps.push({
-      iteration,
+      iteration: i,
       param: theta,
       term1: cosT,
       term2: sinT,
@@ -23,7 +33,6 @@ export const generateCircleSteps = (
       x: xc + r * cosT,
       y: yc + r * sinT,
     });
-    iteration++;
   }
   return steps;
 };

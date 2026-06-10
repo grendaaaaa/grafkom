@@ -97,9 +97,12 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
       {curveType === 'lingkaran' && (
         <>
           <div><label className={lbl}>Jari-jari (r)</label>
-            <input type="number" value={r} onChange={e => setR(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+            <input type="number" value={r} min="0.1"
+              onChange={e => setR(Math.max(0.1, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
           <div><label className={lbl}>Delta Sudut (Δθ)</label>
-            <input type="number" step="0.05" value={deltaTheta} onChange={e => setDeltaTheta(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+            {/* BUG-04: min=0.001 mencegah infinite loop di generator */}
+            <input type="number" step="0.05" value={deltaTheta} min="0.001"
+              onChange={e => setDeltaTheta(Math.max(0.001, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
         </>
       )}
 
@@ -107,27 +110,36 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         <>
           <div className="grid grid-cols-2 gap-3">
             <div><label className={lbl}>Semi-Mayor (a) horiz</label>
-              <input type="number" value={a} onChange={e => setA(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+              <input type="number" value={a} min="0.1"
+                onChange={e => setA(Math.max(0.1, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
             <div><label className={lbl}>Semi-Minor (b) vert</label>
-              <input type="number" value={b} onChange={e => setB(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+              <input type="number" value={b} min="0.1"
+                onChange={e => setB(Math.max(0.1, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
           </div>
           {a === b && <div className="text-xs font-bold text-palette-teal bg-palette-olive/30 px-3 py-2 rounded-lg">✓ a = b → Lingkaran sempurna</div>}
           <div><label className={lbl}>Delta Sudut (Δθ)</label>
-            <input type="number" step="0.05" value={deltaTheta} onChange={e => setDeltaTheta(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+            {/* BUG-04: min=0.001 mencegah infinite loop di generator */}
+            <input type="number" step="0.05" value={deltaTheta} min="0.001"
+              onChange={e => setDeltaTheta(Math.max(0.001, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
         </>
       )}
 
       {curveType === 'parabola' && (
         <>
           <div><label className={lbl}>Fokus / Koefisien (a)</label>
-            <input type="number" step="0.5" value={focusA} onChange={e => setFocusA(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+            <input type="number" step="0.5" value={focusA}
+              onChange={e => setFocusA(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
           <div className="grid grid-cols-3 gap-2">
             <div><label className={lbl}>t Min</label>
-              <input type="number" value={tMin} onChange={e => setTMin(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+              <input type="number" value={tMin}
+                onChange={e => setTMin(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
             <div><label className={lbl}>t Max</label>
-              <input type="number" value={tMax} onChange={e => setTMax(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+              <input type="number" value={tMax}
+                onChange={e => setTMax(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
             <div><label className={lbl}>Δt (step)</label>
-              <input type="number" step="0.1" value={deltaT} onChange={e => setDeltaT(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+              {/* BUG-05: min=0.01 mencegah infinite loop dan tMin>=tMax */}
+              <input type="number" step="0.1" value={deltaT} min="0.01"
+                onChange={e => setDeltaT(Math.max(0.01, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
           </div>
           <div className="text-xs font-semibold text-palette-sage bg-palette-cream/50 px-3 py-2 rounded-lg border border-palette-sage/30">
             x = xp + a·t² &nbsp;|&nbsp; y = yp + 2·a·t
@@ -139,12 +151,16 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         <>
           <div className="grid grid-cols-2 gap-3">
             <div><label className={lbl}>Transversal (a)</label>
-              <input type="number" value={hA} onChange={e => setHA(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+              <input type="number" value={hA} min="0.1"
+                onChange={e => setHA(Math.max(0.1, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
             <div><label className={lbl}>Konjugasi (b)</label>
-              <input type="number" value={hB} onChange={e => setHB(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+              <input type="number" value={hB} min="0.1"
+                onChange={e => setHB(Math.max(0.1, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
           </div>
           <div><label className={lbl}>Delta Sudut (Δθ)</label>
-            <input type="number" step="0.05" value={deltaTheta} onChange={e => setDeltaTheta(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+            {/* BUG-04: min=0.001 mencegah infinite loop di generator */}
+            <input type="number" step="0.05" value={deltaTheta} min="0.001"
+              onChange={e => setDeltaTheta(Math.max(0.001, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
           <div className="text-xs font-semibold text-palette-sage bg-palette-cream/50 px-3 py-2 rounded-lg border border-palette-sage/30">
             x = xc + a·sec(θ) &nbsp;|&nbsp; y = yc + b·tan(θ)
           </div>

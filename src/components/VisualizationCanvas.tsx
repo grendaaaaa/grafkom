@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import type { Point, VisualizationMode, CurveType } from '../types';
 
 interface Props {
@@ -12,8 +12,25 @@ interface Props {
 export const VisualizationCanvas: React.FC<Props> = ({
   points, xc, yc, r, a, b, focusA, hA, hB, mode, curveType,
 }) => {
-  const canvasRef   = useRef<HTMLCanvasElement>(null);
+  const canvasRef    = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  // BUG-08: track ukuran container agar useEffect draw ter-trigger saat resize
+  const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
+
+  // BUG-08: ResizeObserver — canvas di-redraw setiap kali ukuran container berubah
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const observer = new ResizeObserver(() => {
+      const rect = container.getBoundingClientRect();
+      setContainerSize({ w: rect.width, h: rect.height });
+    });
+    observer.observe(container);
+    // Set ukuran awal
+    const rect = container.getBoundingClientRect();
+    setContainerSize({ w: rect.width, h: rect.height });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const canvas    = canvasRef.current;
@@ -244,7 +261,7 @@ export const VisualizationCanvas: React.FC<Props> = ({
         ctx.fillText(label, mx(last.x) + 11 + tw / 2, my(last.y) - 13);
       }
     }
-  }, [points, xc, yc, r, a, b, focusA, hA, hB, mode, curveType]);
+  }, [points, xc, yc, r, a, b, focusA, hA, hB, mode, curveType, containerSize]); // BUG-08: +containerSize
 
   return (
     <div ref={containerRef} className="w-full h-full min-h-[500px]">

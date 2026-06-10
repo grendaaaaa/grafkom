@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ControlPanel } from './components/ControlPanel';
 import { VisualizationCanvas } from './components/VisualizationCanvas';
 import { CalculationTable } from './components/CalculationTable';
@@ -44,44 +44,70 @@ function App() {
 
   const allStepsRef  = useRef<CalculationStep[]>([]);
   const iterationRef = useRef<number>(0);
+  // BUG-02: simpan referensi timer init (800ms) agar bisa di-cancel saat reset
+  const startTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const calculateNextStep = () => {
+  // BUG-01: wrap dalam useCallback dengan deps stabil.
+  // Fungsi ini HANYA membaca dari refs dan state setters — aman tanpa deps.
+  // Return value: true jika masih ada step, false jika sudah selesai (BUG-07)
+  const calculateNextStep = useCallback((): boolean => {
     if (iterationRef.current >= allStepsRef.current.length) {
-      setIsRunning(false); setIsFinished(true); setCurrentPhase('done'); return;
+      setIsRunning(false); setIsFinished(true); setCurrentPhase('done');
+      return false; // BUG-07: return false agar handleStepForward tahu sudah selesai
     }
     const s = allStepsRef.current[iterationRef.current];
     iterationRef.current += 1;
-    // Jika NaN (separator antarcabang), jangan di-return agar state tetap terupdate
-    // dan memicu iterasi / frame berikutnya untuk cabang kedua.
+    // NaN point adalah separator antarcabang hiperbola — tetap masuk ke points
+    // agar drawPath di VisualizationCanvas bisa mendeteksi dan memutus path.
     setPoints(prev => [...prev, { x: s.x, y: s.y }]);
     setSteps(prev => [...prev, s]);
-  };
+    return true;
+  }, []); // stable — hanya gunakan refs dan setters yang tidak berubah
 
+  // BUG-01: sertakan calculateNextStep di deps (kini stabil karena useCallback)
+  // Pola effect-chain ini aman: setiap kali points berubah, effect lama di-cleanup
+  // (clearTimeout) dan effect baru menjadwalkan satu timeout baru.
   useEffect(() => {
     if (!isRunning) return;
     const id = setTimeout(calculateNextStep, 50);
     return () => clearTimeout(id);
-  }, [isRunning, points]);
+  }, [isRunning, points, calculateNextStep]);
 
-  const prepSteps = () => {
+  const prepSteps = useCallback(() => {
     if (allStepsRef.current.length > 0) return;
     if      (curveType === 'lingkaran') allStepsRef.current = generateCircleSteps(xc, yc, r, deltaTheta);
     else if (curveType === 'elips')     allStepsRef.current = generateEllipseSteps(xc, yc, a, b, deltaTheta);
     else if (curveType === 'parabola')  allStepsRef.current = generateParabolaSteps(xc, yc, focusA, tMin, tMax, deltaT);
     else if (curveType === 'hiperbola') allStepsRef.current = generateHyperbolaSteps(xc, yc, hA, hB, deltaTheta);
-  };
+  }, [curveType, xc, yc, r, a, b, deltaTheta, focusA, tMin, tMax, deltaT, hA, hB]);
 
-  const handleStart = () => {
+  const handleStart = useCallback(() => {
+    clearTimeout(startTimerRef.current); // BUG-02: cancel timer init yang masih pending
     if (isFinished) { setPoints([]); setSteps([]); iterationRef.current = 0; allStepsRef.current = []; }
     if (iterationRef.current === 0) {
       setCurrentPhase('init');
-      setTimeout(() => { prepSteps(); setCurrentPhase('running'); setIsRunning(true); setIsFinished(false); }, 800);
+      // BUG-02: simpan id timer agar bisa di-cancel oleh handleReset
+      startTimerRef.current = setTimeout(() => {
+        prepSteps(); setCurrentPhase('running'); setIsRunning(true); setIsFinished(false);
+      }, 800);
     } else { setCurrentPhase('running'); setIsRunning(true); }
-  };
+  }, [isFinished, prepSteps]);
 
-  const handlePause        = () => { setIsRunning(false); setCurrentPhase('paused'); };
-  const handleStepForward  = () => { setIsRunning(false); prepSteps(); setCurrentPhase('running'); calculateNextStep(); setCurrentPhase('paused'); };
-  const handleStepBackward = () => {
+  const handlePause = useCallback(() => { setIsRunning(false); setCurrentPhase('paused'); }, []);
+
+  // BUG-07: calculateNextStep sekarang return boolean.
+  // Hanya set 'paused' jika masih ada step — jangan timpa state 'done' yang
+  // di-set dari dalam calculateNextStep ketika sudah mencapai akhir.
+  const handleStepForward = useCallback(() => {
+    if (isFinished) return;
+    setIsRunning(false);
+    prepSteps();
+    const hasMore = calculateNextStep();
+    if (hasMore) setCurrentPhase('paused');
+    // jika !hasMore → calculateNextStep sudah set 'done', tidak perlu override
+  }, [isFinished, prepSteps, calculateNextStep]);
+
+  const handleStepBackward = useCallback(() => {
     setIsRunning(false);
     if (iterationRef.current > 0) {
       iterationRef.current -= 1;
@@ -89,12 +115,15 @@ function App() {
       setSteps(prev => prev.slice(0, -1));
       setIsFinished(false); setCurrentPhase('paused');
     }
-  };
-  const handleReset = () => {
+  }, []);
+
+  const handleReset = useCallback(() => {
+    clearTimeout(startTimerRef.current); // BUG-02: cancel pending init timer
     setIsRunning(false); setIsFinished(false); setCurrentPhase('idle');
     setPoints([]); setSteps([]); iterationRef.current = 0; allStepsRef.current = [];
-  };
-  const handleCurveChange = (type: CurveType) => { handleReset(); setCurveType(type); };
+  }, []);
+
+  const handleCurveChange = useCallback((type: CurveType) => { handleReset(); setCurveType(type); }, [handleReset]);
 
   return (
     <div className="min-h-screen text-[#1d4d52] p-4 md:p-8 font-sans">
