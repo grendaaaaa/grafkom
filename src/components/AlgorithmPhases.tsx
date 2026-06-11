@@ -1,14 +1,19 @@
 import React from 'react';
-import type { AlgorithmPhase, CurveType } from '../types';
+import type { AlgorithmPhase, CurveType, AlgorithmType } from '../types';
 import { Play, RotateCcw, Calculator, MonitorPlay } from 'lucide-react';
 
-interface Props { currentPhase: AlgorithmPhase; curveType: CurveType; }
+interface Props { currentPhase: AlgorithmPhase; curveType: CurveType; algorithmType: AlgorithmType; }
 
 const formulaMap: Record<string, React.ReactNode> = {
   lingkaran: <><span>x = x<sub>c</sub> + r · cos(θ)</span><br/><span>y = y<sub>c</sub> + r · sin(θ)</span></>,
   elips:     <><span>x = x<sub>c</sub> + a · cos(θ)</span><br/><span>y = y<sub>c</sub> + b · sin(θ)</span></>,
   parabola:  <><span>x = x<sub>p</sub> + a · t²</span><br/><span>y = y<sub>p</sub> + 2 · a · t</span></>,
   hiperbola: <><span>x = x<sub>c</sub> + a · sec(θ)</span><br/><span>y = y<sub>c</sub> + b · tan(θ)</span></>,
+};
+
+const bresenhamFormulaMap: Record<string, React.ReactNode> = {
+  lingkaran: <><span>d<sub>awal</sub> = 3 - 2r</span><br/><span>Jika d &lt; 0: d += 4x + 6</span><br/><span>Jika d &ge; 0: d += 4(x-y) + 10</span></>,
+  elips:     <><span>R1: d<sub>awal</sub> = b² - a²b + 0.25a²</span><br/><span>R2: d<sub>awal</sub> = b²(x+0.5)² + a²(y-1)² - a²b²</span><br/><span>Evaluasi d untuk arah x / y</span></>,
 };
 
 const initMap: Record<string, string> = {
@@ -18,7 +23,12 @@ const initMap: Record<string, string> = {
   hiperbola: 'Tentukan pusat (xc, yc), sumbu transversal a, sumbu konjugasi b, dan rentang parameter sudut θ.',
 };
 
-export const AlgorithmPhases: React.FC<Props> = ({ currentPhase, curveType }) => {
+const bresenhamInitMap: Record<string, string> = {
+  lingkaran: 'Tentukan pusat (xc, yc), jari-jari r. Set nilai awal d, x=0, y=r.',
+  elips:     'Tentukan pusat (xc, yc), jari-jari a dan b. Set nilai awal d, x=0, y=b.',
+};
+
+export const AlgorithmPhases: React.FC<Props> = ({ currentPhase, curveType, algorithmType }) => {
   const isRunning   = currentPhase === 'running';
   const isRendering = currentPhase === 'running' || currentPhase === 'done';
 
@@ -38,7 +48,11 @@ export const AlgorithmPhases: React.FC<Props> = ({ currentPhase, curveType }) =>
         <RotateCcw size={22} className={`mt-1 shrink-0 ${currentPhase === 'init' ? 'text-palette-teal' : 'text-gray-400'}`} />
         <div>
           <h3 className={`font-black text-lg ${currentPhase === 'init' ? 'text-palette-teal' : 'text-gray-700'}`}>1. Inisialisasi</h3>
-          <p className="text-sm mt-1.5 leading-relaxed font-medium text-gray-600">{initMap[curveType]}</p>
+          <p className="text-sm mt-1.5 leading-relaxed font-medium text-gray-600">
+            {algorithmType === 'bresenham' && (curveType === 'lingkaran' || curveType === 'elips') 
+              ? bresenhamInitMap[curveType] 
+              : initMap[curveType]}
+          </p>
         </div>
       </div>
 
@@ -48,9 +62,11 @@ export const AlgorithmPhases: React.FC<Props> = ({ currentPhase, curveType }) =>
         <div>
           <h3 className={`font-black text-lg ${isRunning ? 'text-palette-teal' : 'text-gray-700'}`}>2. Iterasi</h3>
           <p className="text-sm mt-1.5 leading-relaxed font-medium text-gray-600">
-            {curveType === 'parabola'
-              ? 'Loop dari t = tMin hingga tMax dengan langkah kecil Δt per iterasi.'
-              : 'Loop nilai sudut θ dengan langkah kecil Δθ per iterasi.'}
+            {algorithmType === 'bresenham' && (curveType === 'lingkaran' || curveType === 'elips')
+              ? 'Loop hingga batas kuadran/oktan tercapai, lalu manfaatkan simetri.'
+              : curveType === 'parabola'
+                ? 'Loop dari t = tMin hingga tMax dengan langkah kecil Δt per iterasi.'
+                : 'Loop nilai sudut θ dengan langkah kecil Δθ per iterasi.'}
           </p>
         </div>
       </div>
@@ -60,10 +76,16 @@ export const AlgorithmPhases: React.FC<Props> = ({ currentPhase, curveType }) =>
         <Calculator size={22} className={`mt-1 shrink-0 ${isRunning ? 'text-palette-teal' : 'text-gray-400'}`} />
         <div>
           <h3 className={`font-black text-lg ${isRunning ? 'text-palette-teal' : 'text-gray-700'}`}>3. Kalkulasi</h3>
-          <p className="text-sm mt-1.5 leading-relaxed font-medium text-gray-600">Hitung nilai x dan y menggunakan rumus parametrik di setiap iterasi.</p>
+          <p className="text-sm mt-1.5 leading-relaxed font-medium text-gray-600">
+            {algorithmType === 'bresenham' && (curveType === 'lingkaran' || curveType === 'elips')
+              ? 'Evaluasi parameter keputusan (d) dengan integer arithmetic untuk menentukan piksel selanjutnya.'
+              : 'Hitung nilai x dan y menggunakan rumus parametrik (floating-point) di setiap iterasi.'}
+          </p>
           <div className={`font-mono border p-2.5 rounded-xl mt-3 text-sm font-bold shadow-inner transition-all duration-300 
             ${isRunning ? 'bg-white/80 border-palette-teal/40 text-[#1d4d52]' : 'bg-gray-50/50 border-gray-200/50 text-gray-400'}`}>
-            {formulaMap[curveType]}
+            {algorithmType === 'bresenham' && (curveType === 'lingkaran' || curveType === 'elips')
+              ? bresenhamFormulaMap[curveType]
+              : formulaMap[curveType]}
           </div>
         </div>
       </div>

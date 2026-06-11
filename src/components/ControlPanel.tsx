@@ -1,20 +1,21 @@
 import React from 'react';
-import { Play, RotateCcw, Pause, StepForward, StepBack } from 'lucide-react';
-import type { CurveType, VisualizationMode } from '../types';
+import { Play, RotateCcw, Pause, StepForward, StepBack, Cpu, FunctionSquare } from 'lucide-react';
+import type { CurveType, VisualizationMode, AlgorithmType } from '../types';
 
 interface ControlPanelProps {
-  xc: number; setXc: (v: number) => void;
-  yc: number; setYc: (v: number) => void;
-  r: number;  setR:  (v: number) => void;
-  a: number;  setA:  (v: number) => void;
-  b: number;  setB:  (v: number) => void;
-  focusA: number; setFocusA: (v: number) => void;
-  tMin: number;   setTMin:   (v: number) => void;
-  tMax: number;   setTMax:   (v: number) => void;
-  deltaT: number; setDeltaT: (v: number) => void;
-  hA: number; setHA: (v: number) => void;
-  hB: number; setHB: (v: number) => void;
-  deltaTheta: number; setDeltaTheta: (v: number) => void;
+  xc: string; setXc: (v: string) => void;
+  yc: string; setYc: (v: string) => void;
+  r: string;  setR:  (v: string) => void;
+  a: string;  setA:  (v: string) => void;
+  b: string;  setB:  (v: string) => void;
+  focusA: string; setFocusA: (v: string) => void;
+  tMin: string;   setTMin:   (v: string) => void;
+  tMax: string;   setTMax:   (v: string) => void;
+  deltaT: string; setDeltaT: (v: string) => void;
+  hA: string; setHA: (v: string) => void;
+  hB: string; setHB: (v: string) => void;
+  deltaTheta: string; setDeltaTheta: (v: string) => void;
+  algorithmType: AlgorithmType; setAlgorithmType: (v: AlgorithmType) => void;
   curveType: CurveType; setCurveType: (v: CurveType) => void;
   visMode: VisualizationMode; setVisMode: (v: VisualizationMode) => void;
   onStart: () => void; onPause: () => void; onReset: () => void;
@@ -34,6 +35,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   focusA, setFocusA, tMin, setTMin, tMax, setTMax, deltaT, setDeltaT,
   hA, setHA, hB, setHB,
   deltaTheta, setDeltaTheta,
+  algorithmType, setAlgorithmType,
   curveType, setCurveType, visMode, setVisMode,
   onStart, onPause, onReset, onStepForward, onStepBackward,
   isRunning, isFinished,
@@ -81,15 +83,49 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         ))}
       </div>
 
+      {/* Toggle Algoritma — hanya untuk lingkaran & elips */}
+      {(curveType === 'lingkaran' || curveType === 'elips') && (
+        <div className="bg-white/40 p-4 rounded-2xl border border-palette-sage/50 shadow-inner">
+          <label className="block text-xs font-black mb-3 text-[#1d4d52] uppercase tracking-widest">Algoritma</label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              disabled={isRunning}
+              onClick={() => setAlgorithmType('parametrik')}
+              className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border-2 font-bold text-sm transition-all duration-300
+                ${algorithmType === 'parametrik'
+                  ? 'bg-palette-teal border-palette-teal text-white shadow-lg shadow-palette-teal/30 scale-[1.03]'
+                  : 'bg-white/50 border-palette-sage text-[#1d4d52] hover:bg-white hover:shadow'}`}
+            >
+              <FunctionSquare size={15} /> Parametrik
+            </button>
+            <button
+              disabled={isRunning}
+              onClick={() => setAlgorithmType('bresenham')}
+              className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border-2 font-bold text-sm transition-all duration-300
+                ${algorithmType === 'bresenham'
+                  ? 'bg-[#1d4d52] border-[#1d4d52] text-palette-olive shadow-lg shadow-[#1d4d52]/30 scale-[1.03]'
+                  : 'bg-white/50 border-palette-sage text-[#1d4d52] hover:bg-white hover:shadow'}`}
+            >
+              <Cpu size={15} /> Bresenham
+            </button>
+          </div>
+          {algorithmType === 'bresenham' && (
+            <p className="mt-2 text-xs font-semibold text-[#1d4d52]/70 bg-[#1d4d52]/5 px-3 py-2 rounded-lg border border-[#1d4d52]/10">
+              ⚡ Integer arithmetic — tidak ada sin/cos, {curveType === 'lingkaran' ? '8' : '4'}-fold symmetry per step
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Parameter Pusat / Vertex */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className={lbl}>{curveType === 'parabola' ? 'Vertex X (xp)' : 'Pusat X (xc)'}</label>
-          <input type="number" value={xc} onChange={e => setXc(Number(e.target.value))} disabled={isRunning} className={inp} />
+          <input type="number" value={xc} onChange={e => setXc(e.target.value)} disabled={isRunning} className={inp} />
         </div>
         <div>
           <label className={lbl}>{curveType === 'parabola' ? 'Vertex Y (yp)' : 'Pusat Y (yc)'}</label>
-          <input type="number" value={yc} onChange={e => setYc(Number(e.target.value))} disabled={isRunning} className={inp} />
+          <input type="number" value={yc} onChange={e => setYc(e.target.value)} disabled={isRunning} className={inp} />
         </div>
       </div>
 
@@ -98,11 +134,13 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         <>
           <div><label className={lbl}>Jari-jari (r)</label>
             <input type="number" value={r} min="0.1"
-              onChange={e => setR(Math.max(0.1, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
-          <div><label className={lbl}>Delta Sudut (Δθ)</label>
-            {/* BUG-04: min=0.001 mencegah infinite loop di generator */}
-            <input type="number" step="0.05" value={deltaTheta} min="0.001"
-              onChange={e => setDeltaTheta(Math.max(0.001, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
+              onChange={e => setR(e.target.value)} disabled={isRunning} className={inp} /></div>
+          {/* Δθ tidak digunakan oleh Bresenham — sembunyikan saat mode itu aktif */}
+          {algorithmType === 'parametrik' && (
+            <div><label className={lbl}>Delta Sudut (Δθ)</label>
+              <input type="number" step="0.05" value={deltaTheta} min="0.001"
+                onChange={e => setDeltaTheta(e.target.value)} disabled={isRunning} className={inp} /></div>
+          )}
         </>
       )}
 
@@ -111,16 +149,18 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div><label className={lbl}>Semi-Mayor (a) horiz</label>
               <input type="number" value={a} min="0.1"
-                onChange={e => setA(Math.max(0.1, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
+                onChange={e => setA(e.target.value)} disabled={isRunning} className={inp} /></div>
             <div><label className={lbl}>Semi-Minor (b) vert</label>
               <input type="number" value={b} min="0.1"
-                onChange={e => setB(Math.max(0.1, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
+                onChange={e => setB(e.target.value)} disabled={isRunning} className={inp} /></div>
           </div>
-          {a === b && <div className="text-xs font-bold text-palette-teal bg-palette-olive/30 px-3 py-2 rounded-lg">✓ a = b → Lingkaran sempurna</div>}
-          <div><label className={lbl}>Delta Sudut (Δθ)</label>
-            {/* BUG-04: min=0.001 mencegah infinite loop di generator */}
-            <input type="number" step="0.05" value={deltaTheta} min="0.001"
-              onChange={e => setDeltaTheta(Math.max(0.001, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
+          {Number(a) === Number(b) && <div className="text-xs font-bold text-palette-teal bg-palette-olive/30 px-3 py-2 rounded-lg">✓ a = b → Lingkaran sempurna</div>}
+          {/* Δθ tidak digunakan oleh Bresenham */}
+          {algorithmType === 'parametrik' && (
+            <div><label className={lbl}>Delta Sudut (Δθ)</label>
+              <input type="number" step="0.05" value={deltaTheta} min="0.001"
+                onChange={e => setDeltaTheta(e.target.value)} disabled={isRunning} className={inp} /></div>
+          )}
         </>
       )}
 
@@ -128,18 +168,18 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         <>
           <div><label className={lbl}>Fokus / Koefisien (a)</label>
             <input type="number" step="0.5" value={focusA}
-              onChange={e => setFocusA(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+              onChange={e => setFocusA(e.target.value)} disabled={isRunning} className={inp} /></div>
           <div className="grid grid-cols-3 gap-2">
             <div><label className={lbl}>t Min</label>
               <input type="number" value={tMin}
-                onChange={e => setTMin(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+                onChange={e => setTMin(e.target.value)} disabled={isRunning} className={inp} /></div>
             <div><label className={lbl}>t Max</label>
               <input type="number" value={tMax}
-                onChange={e => setTMax(Number(e.target.value))} disabled={isRunning} className={inp} /></div>
+                onChange={e => setTMax(e.target.value)} disabled={isRunning} className={inp} /></div>
             <div><label className={lbl}>Δt (step)</label>
               {/* BUG-05: min=0.01 mencegah infinite loop dan tMin>=tMax */}
               <input type="number" step="0.1" value={deltaT} min="0.01"
-                onChange={e => setDeltaT(Math.max(0.01, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
+                onChange={e => setDeltaT(e.target.value)} disabled={isRunning} className={inp} /></div>
           </div>
           <div className="text-xs font-semibold text-palette-sage bg-palette-cream/50 px-3 py-2 rounded-lg border border-palette-sage/30">
             x = xp + a·t² &nbsp;|&nbsp; y = yp + 2·a·t
@@ -152,15 +192,15 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div><label className={lbl}>Transversal (a)</label>
               <input type="number" value={hA} min="0.1"
-                onChange={e => setHA(Math.max(0.1, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
+                onChange={e => setHA(e.target.value)} disabled={isRunning} className={inp} /></div>
             <div><label className={lbl}>Konjugasi (b)</label>
               <input type="number" value={hB} min="0.1"
-                onChange={e => setHB(Math.max(0.1, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
+                onChange={e => setHB(e.target.value)} disabled={isRunning} className={inp} /></div>
           </div>
           <div><label className={lbl}>Delta Sudut (Δθ)</label>
             {/* BUG-04: min=0.001 mencegah infinite loop di generator */}
             <input type="number" step="0.05" value={deltaTheta} min="0.001"
-              onChange={e => setDeltaTheta(Math.max(0.001, Number(e.target.value)))} disabled={isRunning} className={inp} /></div>
+              onChange={e => setDeltaTheta(e.target.value)} disabled={isRunning} className={inp} /></div>
           <div className="text-xs font-semibold text-palette-sage bg-palette-cream/50 px-3 py-2 rounded-lg border border-palette-sage/30">
             x = xc + a·sec(θ) &nbsp;|&nbsp; y = yc + b·tan(θ)
           </div>

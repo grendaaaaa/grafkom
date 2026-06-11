@@ -1,16 +1,18 @@
 import React, { useRef, useEffect, useState } from 'react';
-import type { Point, VisualizationMode, CurveType } from '../types';
+import type { Point, VisualizationMode, CurveType, AlgorithmType, CalculationStep } from '../types';
 
 interface Props {
   points: Point[];
+  steps: CalculationStep[];
   xc: number; yc: number;
   r: number; a: number; b: number; focusA: number; hA: number; hB: number;
   mode: VisualizationMode;
   curveType: CurveType;
+  algorithmType: AlgorithmType;
 }
 
 export const VisualizationCanvas: React.FC<Props> = ({
-  points, xc, yc, r, a, b, focusA, hA, hB, mode, curveType,
+  points, steps, xc, yc, r, a, b, focusA, hA, hB, mode, curveType, algorithmType,
 }) => {
   const canvasRef    = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -168,9 +170,13 @@ export const VisualizationCanvas: React.FC<Props> = ({
       ctx.stroke();
     };
 
-    // ── MODE: GEOMETRI DASAR ────────────────────────────
+    // ── MODE: GEOMETRI DASAR ──────────────────────────────────
     if (mode === 'geometri') {
-      drawPath(points, '#35858E', Math.max(2, gridSize * 0.04));
+      // Bresenham: titik-titik simetri tersebar tidak berurutan — skip path,
+      // tampilkan dots saja agar tidak terbentuk garis zigzag antar oktant.
+      if (algorithmType !== 'bresenham') {
+        drawPath(points, '#35858E', Math.max(2, gridSize * 0.04));
+      }
       ctx.fillStyle = '#ef4444'; // Merah cerah agar sangat jelas dan kontras
       const pr = Math.max(3.5, gridSize * 0.08); // Diperbesar sedikit
       points.forEach(p => {
@@ -204,12 +210,16 @@ export const VisualizationCanvas: React.FC<Props> = ({
         }
       });
 
-      ctx.fillStyle = '#ef4444';
-      points.forEach(p => {
-        if (!isNaN(p.x) && !isNaN(p.y)) {
-          ctx.beginPath(); ctx.arc(mx(p.x), my(p.y), Math.max(2, gridSize * 0.04), 0, Math.PI * 2); ctx.fill();
-        }
-      });
+      // Titik pusat (hanya 1 dot per titik unik) — kecil agar tidak tenggelam oleh kotak
+      // Untuk Bresenham: lewati karena kotak grid sudah cukup representatif
+      if (algorithmType !== 'bresenham') {
+        ctx.fillStyle = '#ef4444';
+        points.forEach(p => {
+          if (!isNaN(p.x) && !isNaN(p.y)) {
+            ctx.beginPath(); ctx.arc(mx(p.x), my(p.y), Math.max(2, gridSize * 0.04), 0, Math.PI * 2); ctx.fill();
+          }
+        });
+      }
 
     // ── MODE: ANALISIS VISUAL ───────────────────────────
     } else if (mode === 'analisis') {
@@ -235,12 +245,38 @@ export const VisualizationCanvas: React.FC<Props> = ({
       }
       ctx.setLineDash([]);
 
-      drawPath(points, '#35858E', Math.max(2, gridSize * 0.04));
+      // Gambar kurva parametrik sebagai referensi (selalu pakai path kontinu)
+      // Untuk Bresenham, path diskontinu antar oktan — skip agar tidak zigzag
+      if (algorithmType !== 'bresenham') {
+        drawPath(points, '#35858E', Math.max(2, gridSize * 0.04));
+      } else {
+        // Bresenham: tampilkan dots saja di mode analisis
+        ctx.fillStyle = '#35858E';
+        const br = Math.max(3, gridSize * 0.07);
+        points.forEach(p => {
+          if (!isNaN(p.x) && !isNaN(p.y)) {
+            ctx.beginPath(); ctx.arc(mx(p.x), my(p.y), br, 0, Math.PI * 2); ctx.fill();
+          }
+        });
+      }
 
-      // Ambil poin terakhir yang BUKAN NaN
-      const validPoints = points.filter(p => !isNaN(p.x) && !isNaN(p.y));
-      if (validPoints.length > 0) {
-        const last = validPoints[validPoints.length - 1];
+      // Gunakan titik utama (primary point) dari langkah terakhir untuk garis bantu P
+      let primaryPoint: Point | null = null;
+      if (steps && steps.length > 0) {
+        const lastStep = steps[steps.length - 1];
+        if (!isNaN(lastStep.x) && !isNaN(lastStep.y)) {
+          primaryPoint = { x: lastStep.x, y: lastStep.y };
+        }
+      } else {
+        // Fallback
+        const validPoints = points.filter(p => !isNaN(p.x) && !isNaN(p.y));
+        if (validPoints.length > 0) {
+          primaryPoint = validPoints[validPoints.length - 1];
+        }
+      }
+
+      if (primaryPoint) {
+        const last = primaryPoint;
 
         ctx.setLineDash([4, 4]);
         ctx.strokeStyle = '#C2D099'; ctx.lineWidth = 2;
@@ -261,7 +297,7 @@ export const VisualizationCanvas: React.FC<Props> = ({
         ctx.fillText(label, mx(last.x) + 11 + tw / 2, my(last.y) - 13);
       }
     }
-  }, [points, xc, yc, r, a, b, focusA, hA, hB, mode, curveType, containerSize]); // BUG-08: +containerSize
+  }, [points, xc, yc, r, a, b, focusA, hA, hB, mode, curveType, algorithmType, containerSize]);
 
   return (
     <div ref={containerRef} className="w-full h-full min-h-[500px]">

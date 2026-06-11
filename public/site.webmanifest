@@ -1,0 +1,18 @@
+{
+  "name": "Visualisasi Algoritma Kurva",
+  "short_name": "Grafkom",
+  "description": "Platform pembelajaran grafika komputer interaktif — visualisasi algoritma pembangkitan kurva (Parametrik & Bresenham) secara matematis dan step-by-step.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#35858E",
+  "background_color": "#1d4d52",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/"
+}
