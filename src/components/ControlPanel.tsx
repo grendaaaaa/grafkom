@@ -468,39 +468,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
         ))}
       </div>
 
-      {/* Toggle Algoritma — hanya untuk lingkaran & elips */}
-      {(curveType === 'lingkaran' || curveType === 'elips') && (
-        <div className="bg-white/40 p-4 rounded-2xl border border-palette-sage/50 shadow-inner">
-          <label className="block text-xs font-black mb-3 text-[#1d4d52] uppercase tracking-widest">Algoritma</label>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              disabled={isRunning}
-              onClick={() => setAlgorithmType('parametrik')}
-              className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border-2 font-bold text-sm transition-all duration-300
-                ${algorithmType === 'parametrik'
-                  ? 'bg-palette-teal border-palette-teal text-white shadow-lg shadow-palette-teal/30 scale-[1.03]'
-                  : 'bg-white/50 border-palette-sage text-[#1d4d52] hover:bg-white hover:shadow'}`}
-            >
-              <FunctionSquare size={15} /> Parametrik
-            </button>
-            <button
-              disabled={isRunning}
-              onClick={() => setAlgorithmType('bresenham')}
-              className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border-2 font-bold text-sm transition-all duration-300
-                ${algorithmType === 'bresenham'
-                  ? 'bg-[#1d4d52] border-[#1d4d52] text-palette-olive shadow-lg shadow-[#1d4d52]/30 scale-[1.03]'
-                  : 'bg-white/50 border-palette-sage text-[#1d4d52] hover:bg-white hover:shadow'}`}
-            >
-              <Cpu size={15} /> Bresenham
-            </button>
-          </div>
-          {algorithmType === 'bresenham' && (
-            <p className="mt-2 text-xs font-semibold text-[#1d4d52]/70 bg-[#1d4d52]/5 px-3 py-2 rounded-lg border border-[#1d4d52]/10">
-              ⚡ Integer arithmetic — tidak ada sin/cos, {curveType === 'lingkaran' ? '8' : '4'}-fold symmetry per step
-            </p>
-          )}
-        </div>
-      )}
 
       {/* ── Parameter Pusat / Vertex ── */}
       <div className="grid grid-cols-2 gap-3">
