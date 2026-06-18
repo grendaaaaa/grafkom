@@ -303,45 +303,7 @@ export const CalculationTable: React.FC<Props> = ({
     };
   };
 
-  const getParametricBreakdown = (step: CalculationStep, curve: CurveType) => {
-    const t1 = step.term1.toFixed(4);
-    const t2 = step.term2.toFixed(4);
-    const xcStr = Math.round(xc).toString();
-    const ycStr = Math.round(yc).toString();
 
-    let xFormula = "";
-    let yFormula = "";
-    let xCalc = "";
-    let yCalc = "";
-
-    if (curve === 'lingkaran') {
-      xFormula = `xc + r·cos(θ)`;
-      yFormula = `yc + r·sin(θ)`;
-      xCalc = `${xcStr} + ${Math.round(r)}(${t1})`;
-      yCalc = `${ycStr} + ${Math.round(r)}(${t2})`;
-    } else if (curve === 'elips') {
-      xFormula = `xc + a·cos(θ)`;
-      yFormula = `yc + b·sin(θ)`;
-      xCalc = `${xcStr} + ${Math.round(a)}(${t1})`;
-      yCalc = `${ycStr} + ${Math.round(b)}(${t2})`;
-    } else if (curve === 'parabola') {
-      // PBUG-1 NOTE: Di parabola.ts, term1=t dan term2=t².
-      // Formula: x = xc + a·t²  → menggunakan term2 (t²)
-      //          y = yc + 2a·t   → menggunakan term1 (t)
-      // Ini SENGAJA "terbalik" urutan term, sesuai mapping di parabola.ts.
-      xFormula = `xc + a·t²`;
-      yFormula = `yc + 2a·t`;
-      xCalc = `${xcStr} + ${focusA}·(${t2})`; // t2 = t² ✓
-      yCalc = `${ycStr} + ${2*focusA}·(${t1})`; // t1 = t  ✓
-    } else if (curve === 'hiperbola') {
-      xFormula = `xc + a·sec(θ)`;
-      yFormula = `yc + b·tan(θ)`;
-      xCalc = `${xcStr} + ${hA}(${t1})`;
-      yCalc = `${ycStr} + ${hB}(${t2})`;
-    }
-
-    return { xFormula, yFormula, xCalc, yCalc };
-  };
 
   const getBresenhamFormulaName = (step: CalculationStep, curve: CurveType) => {
     const { yComponent: branch } = step;
@@ -461,13 +423,17 @@ export const CalculationTable: React.FC<Props> = ({
                           </span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="py-3 px-4 text-center text-gray-400 text-xs italic">
+                        {/* Detail button commented out for Bresenham as requested */}
+                        {/* 
                         <button
                           onClick={() => setSelectedStep(step)}
                           className="px-3 py-1 bg-palette-teal text-white text-xs font-bold rounded-lg hover:bg-[#1d4d52] transition-colors"
                         >
                           Detail
                         </button>
+                        */}
+                        -
                       </td>
                     </tr>
                   );
@@ -575,88 +541,266 @@ export const CalculationTable: React.FC<Props> = ({
                   </h4>
                   <div className="bg-white p-4 rounded-xl border border-palette-sage/50 font-mono text-sm space-y-2">
                     {algorithmType === "bresenham" ? (
-                      <>
-                        {/* BUG-A3 FIX: Banner d_awal untuk Lingkaran dan Elips di iterasi pertama */}
-                        {selectedStep.iteration === 0 && curveType === 'lingkaran' && (
-                          <div className="bg-palette-teal/10 p-3 rounded-lg border border-palette-teal/20 mb-4 text-xs text-[#1d4d52] font-medium">
-                            <div className="font-bold uppercase tracking-wider mb-2">Inisialisasi Parameter Lingkaran:</div>
-                            <code className="bg-white px-2 py-1 rounded font-bold border border-palette-sage/50 block">
-                              d_awal = 3 - 2r = 3 - 2({Math.round(r)}) = {selectedStep.param.toFixed(0)}
-                            </code>
-                          </div>
-                        )}
-                        {selectedStep.iteration === 0 && curveType === 'elips' && (
-                          <div className="bg-palette-teal/10 p-3 rounded-lg border border-palette-teal/20 mb-4 text-xs text-[#1d4d52] font-medium">
-                            <div className="font-bold uppercase tracking-wider mb-2">Inisialisasi Parameter Elips (Region 1):</div>
-                            <div className="space-y-1 font-mono">
-                              <div className="text-gray-600">d_awal = b² - a²·b + 0.25·a²</div>
-                              <code className="bg-white px-2 py-1 rounded font-bold border border-palette-sage/50 block">
-                                = {Math.round(b*b)} - {Math.round(a*a)}·{Math.round(b)} + 0.25·{Math.round(a*a)} = {selectedStep.param.toFixed(0)}
-                              </code>
-                            </div>
-                          </div>
-                        )}
+                      (() => {
+                        const x0 = Math.round(selectedStep.term1);
+                        const y0 = Math.round(selectedStep.term2);
+                        const d0 = Math.round(selectedStep.param);
+                        const dAfter = Math.round(selectedStep.xComponent);
+                        const branch = selectedStep.yComponent;
+                        const b2 = Math.round(b * b);
+                        const a2 = Math.round(a * a);
+                        const cr = Math.round(r);
 
-                        <div className="flex justify-between items-center pb-2 border-b border-gray-100">
-                          <span className="text-gray-500">Nilai Parameter Awal (d)</span>
-                          <span className="font-bold text-[#1d4d52]">
-                            {selectedStep.param.toFixed(0)}
-                          </span>
-                        </div>
-                        <div className="flex flex-col sm:flex-row justify-between sm:items-center py-2 border-b border-gray-100 gap-2">
-                          <span className="text-gray-500">Evaluasi Kondisi & Rumus</span>
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded font-bold">
-                              {selectedStep.param < 0 ? 'd < 0' : 'd ≥ 0'}
-                            </span>
-                            <span className="text-gray-400">➔</span>
-                            <span className="bg-palette-teal/10 text-palette-teal px-2 py-1 rounded font-bold">
-                              {getBresenhamFormulaName(selectedStep, curveType)}
-                            </span>
+                        // Build step-by-step lines for Bresenham
+                        let lines: { label: string; value: string; highlight?: boolean }[] = [];
+
+                        // Initialization block for iteration 0
+                        if (selectedStep.iteration === 0) {
+                          if (curveType === 'lingkaran') {
+                            lines.push({ label: '─── Inisialisasi ───', value: '' });
+                            lines.push({ label: 'r', value: `${cr}` });
+                            lines.push({ label: 'x₀ = 0', value: '0' });
+                            lines.push({ label: 'y₀ = r', value: `${cr}` });
+                            lines.push({ label: 'd_awal = 3 - 2r', value: `3 - 2(${cr}) = 3 - ${2*cr} = ${3 - 2*cr}` });
+                          } else if (curveType === 'elips') {
+                            lines.push({ label: '─── Inisialisasi Region 1 ───', value: '' });
+                            lines.push({ label: 'a', value: `${Math.round(a)}`, });
+                            lines.push({ label: 'b', value: `${Math.round(b)}` });
+                            lines.push({ label: 'a²', value: `${Math.round(a)}² = ${a2}` });
+                            lines.push({ label: 'b²', value: `${Math.round(b)}² = ${b2}` });
+                            lines.push({ label: 'x₀ = 0', value: '0' });
+                            lines.push({ label: 'y₀ = b', value: `${Math.round(b)}` });
+                            lines.push({ label: 'd = b² - a²b + 0.25a²', value: `${b2} - ${a2}·${Math.round(b)} + 0.25·${a2}` });
+                            lines.push({ label: '     = b² - a²b + 0.25a²', value: `${b2} - ${a2 * Math.round(b)} + ${0.25 * a2} = ${d0}`, highlight: true });
+                          }
+                        }
+
+                        // Common step-by-step for all iterations
+                        lines.push({ label: '─── Iterasi ' + selectedStep.iteration + ' ───', value: '' });
+                        lines.push({ label: 'd (sebelum)', value: `${d0}` });
+                        lines.push({ label: 'x', value: `${x0}` });
+                        lines.push({ label: 'y', value: `${y0}` });
+                        lines.push({ label: 'Kondisi: d < 0?', value: d0 < 0 ? `${d0} < 0 → YA → pilih East/Region sesuai` : `${d0} ≥ 0 → TIDAK → pilih SE/Region sesuai` });
+
+                        if (curveType === 'lingkaran') {
+                          if (branch === 0) {
+                            lines.push({ label: 'Pilih arah', value: 'East (hanya x++)' });
+                            lines.push({ label: 'd += 4x + 6', value: `${d0} + 4(${x0}) + 6` });
+                            lines.push({ label: '         = d + 4x + 6', value: `${d0} + ${4*x0} + 6 = ${d0 + 4*x0 + 6}`, highlight: true });
+                            lines.push({ label: 'x_baru = x + 1', value: `${x0} + 1 = ${x0+1}` });
+                            lines.push({ label: 'y_baru = y', value: `${y0} (tidak berubah)` });
+                          } else {
+                            lines.push({ label: 'Pilih arah', value: 'South-East (x++ dan y--)' });
+                            lines.push({ label: 'd += 4(x-y) + 10', value: `${d0} + 4(${x0}-${y0}) + 10` });
+                            lines.push({ label: '         = d + 4(x-y) + 10', value: `${d0} + 4(${x0-y0}) + 10 = ${d0 + 4*(x0-y0) + 10}`, highlight: true });
+                            lines.push({ label: 'x_baru = x + 1', value: `${x0} + 1 = ${x0+1}` });
+                            lines.push({ label: 'y_baru = y - 1', value: `${y0} - 1 = ${y0-1}` });
+                          }
+                        } else if (curveType === 'elips') {
+                          if (branch === 0) {
+                            lines.push({ label: 'Region 1 → East', value: '' });
+                            lines.push({ label: 'd += 2b²(x+1) + b²', value: `${d0} + 2(${b2})(${x0}+1) + ${b2}` });
+                            lines.push({ label: '       = d + 2b²x + 3b²', value: `${d0} + ${2*b2*(x0+1)} + ${b2} = ${dAfter}`, highlight: true });
+                            lines.push({ label: 'x_baru = x + 1', value: `${x0} + 1 = ${x0+1}` });
+                            lines.push({ label: 'y_baru = y', value: `${y0} (tidak berubah)` });
+                          } else if (branch === 1) {
+                            lines.push({ label: 'Region 1 → South-East', value: '' });
+                            lines.push({ label: 'd += 2b²(x+1) - 2a²(y-1) + b²', value: `${d0} + 2(${b2})(${x0}+1) - 2(${a2})(${y0}-1) + ${b2}` });
+                            lines.push({ label: '       (substitusi)', value: `${d0} + ${2*b2*(x0+1)} - ${2*a2*(y0-1)} + ${b2} = ${dAfter}`, highlight: true });
+                            lines.push({ label: 'x_baru = x + 1', value: `${x0} + 1 = ${x0+1}` });
+                            lines.push({ label: 'y_baru = y - 1', value: `${y0} - 1 = ${y0-1}` });
+                          } else if (branch === 2) {
+                            lines.push({ label: 'Region 2 → South', value: '' });
+                            lines.push({ label: 'd -= 2a²(y-1) + a²', value: `${d0} - 2(${a2})(${y0}-1) + ${a2}` });
+                            lines.push({ label: '       (substitusi)', value: `${d0} - ${2*a2*(y0-1)} + ${a2} = ${dAfter}`, highlight: true });
+                            lines.push({ label: 'x_baru = x', value: `${x0} (tidak berubah)` });
+                            lines.push({ label: 'y_baru = y - 1', value: `${y0} - 1 = ${y0-1}` });
+                          } else if (branch === 3) {
+                            lines.push({ label: 'Region 2 → South-East', value: '' });
+                            lines.push({ label: 'd += 2b²(x+1) - 2a²(y-1) + a²', value: `${d0} + 2(${b2})(${x0}+1) - 2(${a2})(${y0}-1) + ${a2}` });
+                            lines.push({ label: '       (substitusi)', value: `${d0} + ${2*b2*(x0+1)} - ${2*a2*(y0-1)} + ${a2} = ${dAfter}`, highlight: true });
+                            lines.push({ label: 'x_baru = x + 1', value: `${x0} + 1 = ${x0+1}` });
+                            lines.push({ label: 'y_baru = y - 1', value: `${y0} - 1 = ${y0-1}` });
+                          }
+                        }
+                        lines.push({ label: 'd (sesudah)', value: `${dAfter}`, highlight: true });
+
+                        return (
+                          <div className="flex flex-col gap-1.5">
+                            {lines.map((line, i) => (
+                              line.value === '' ? (
+                                <div key={i} className="text-[10px] font-bold uppercase tracking-widest text-palette-teal/60 mt-3 mb-1 border-t border-palette-sage/20 pt-2">
+                                  {line.label}
+                                </div>
+                              ) : (
+                                <div key={i} className={`flex items-start justify-between gap-4 py-1 px-2 rounded ${line.highlight ? 'bg-palette-teal/10 border border-palette-teal/20' : 'hover:bg-gray-50'}`}>
+                                  <span className="text-gray-500 text-xs shrink-0 w-44">{line.label}</span>
+                                  <span className={`text-right font-mono text-sm ${line.highlight ? 'font-black text-[#1d4d52]' : 'text-gray-700'}`}>{line.value}</span>
+                                </div>
+                              )
+                            ))}
                           </div>
-                        </div>
-                        <div className="flex justify-between items-center pt-2 text-gray-700">
-                          <span>Penjabaran d (sesudah)</span>
-                          <span className="bg-palette-olive/20 px-2 py-1 rounded font-bold">
-                            {formulaLabel(selectedStep, curveType)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center pt-2 mt-2 border-t border-gray-100">
-                          <span className="font-bold text-[#1d4d52]">Hasil Akhir Parameter</span>
-                          <span className="font-black text-lg text-[#1d4d52]">
-                            {selectedStep.xComponent.toFixed(0)}
-                          </span>
-                        </div>
-                      </>
+                        );
+                      })()
                     ) : (
                       <div className="space-y-4">
-                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 flex flex-col gap-2">
-                          <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">
-                            Perhitungan Sumbu X
-                          </div>
-                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 font-mono text-sm">
-                            <span className="font-bold text-palette-teal w-28 shrink-0">{getParametricBreakdown(selectedStep, curveType).xFormula}</span>
-                            <span className="text-gray-400">→</span>
-                            <span className="text-gray-600">{getParametricBreakdown(selectedStep, curveType).xCalc}</span>
-                            <span className="text-gray-400">→</span>
-                            <span className="text-gray-500">{Math.round(xc)} + {selectedStep.xComponent.toFixed(2)}</span>
-                            <span className="font-black text-[#1d4d52] ml-auto text-base whitespace-nowrap">= {selectedStep.x.toFixed(2)}</span>
-                          </div>
-                        </div>
+                        {(() => {
+                          const radToDeg = (rad: number) => (rad * 180 / Math.PI).toFixed(4);
+                          const p = selectedStep.param;
+                          const pDeg = radToDeg(p);
+                          const t1 = selectedStep.term1;
+                          const t2 = selectedStep.term2;
+                          const t1s = t1.toFixed(6);
+                          const t2s = t2.toFixed(6);
+                          const ps = p.toFixed(6);
+                          const psFmt = p.toFixed(3);
+                          const cXc = Math.round(xc);
+                          const cYc = Math.round(yc);
 
-                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 flex flex-col gap-2">
-                          <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">
-                            Perhitungan Sumbu Y
-                          </div>
-                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 font-mono text-sm">
-                            <span className="font-bold text-palette-teal w-28 shrink-0">{getParametricBreakdown(selectedStep, curveType).yFormula}</span>
-                            <span className="text-gray-400">→</span>
-                            <span className="text-gray-600">{getParametricBreakdown(selectedStep, curveType).yCalc}</span>
-                            <span className="text-gray-400">→</span>
-                            <span className="text-gray-500">{Math.round(yc)} + {selectedStep.yComponent.toFixed(2)}</span>
-                            <span className="font-black text-[#1d4d52] ml-auto text-base whitespace-nowrap">= {selectedStep.y.toFixed(2)}</span>
-                          </div>
-                        </div>
+                          type Line = { label: string; value?: string; highlight?: boolean; separator?: boolean };
+                          let xLines: Line[] = [];
+                          let yLines: Line[] = [];
+
+                          if (curveType === 'lingkaran') {
+                            const cr = Math.round(r);
+                            xLines = [
+                              { label: 'Rumus', value: 'x = xc + r·cos(θ)' },
+                              { separator: true, label: 'Substitusi Parameter' },
+                              { label: 'xc', value: `${cXc}` },
+                              { label: 'r', value: `${cr}` },
+                              { label: 'θ (radian)', value: `${psFmt} rad` },
+                              { label: 'θ (derajat) = θ × 180/π', value: `${psFmt} × 180 / π = ${psFmt} × 57.2958 = ${pDeg}°` },
+                              { separator: true, label: 'Hitung cos(θ)' },
+                              { label: `cos(${psFmt} rad) = cos(${pDeg}°)`, value: `${t1s}` },
+                              { separator: true, label: 'Hitung x' },
+                              { label: 'x = xc + r·cos(θ)', value: `${cXc} + ${cr} × ${t1s}` },
+                              { label: `x = ${cXc} + ${(cr * t1).toFixed(6)}`, value: `${selectedStep.x.toFixed(4)}`, highlight: true },
+                            ];
+                            yLines = [
+                              { label: 'Rumus', value: 'y = yc + r·sin(θ)' },
+                              { separator: true, label: 'Substitusi Parameter' },
+                              { label: 'yc', value: `${cYc}` },
+                              { label: 'r', value: `${cr}` },
+                              { label: 'θ (radian)', value: `${psFmt} rad` },
+                              { label: 'θ (derajat) = θ × 180/π', value: `${psFmt} × 180 / π = ${psFmt} × 57.2958 = ${pDeg}°` },
+                              { separator: true, label: 'Hitung sin(θ)' },
+                              { label: `sin(${psFmt} rad) = sin(${pDeg}°)`, value: `${t2s}` },
+                              { separator: true, label: 'Hitung y' },
+                              { label: 'y = yc + r·sin(θ)', value: `${cYc} + ${cr} × ${t2s}` },
+                              { label: `y = ${cYc} + ${(cr * t2).toFixed(6)}`, value: `${selectedStep.y.toFixed(4)}`, highlight: true },
+                            ];
+                          } else if (curveType === 'elips') {
+                            const ca = Math.round(a);
+                            const cb = Math.round(b);
+                            xLines = [
+                              { label: 'Rumus', value: 'x = xc + a·cos(θ)' },
+                              { separator: true, label: 'Substitusi Parameter' },
+                              { label: 'xc', value: `${cXc}` },
+                              { label: 'a (semi-mayor)', value: `${ca}` },
+                              { label: 'θ (radian)', value: `${psFmt} rad` },
+                              { label: 'θ (derajat) = θ × 180/π', value: `${psFmt} × 57.2958 = ${pDeg}°` },
+                              { separator: true, label: 'Hitung cos(θ)' },
+                              { label: `cos(${psFmt} rad) = cos(${pDeg}°)`, value: `${t1s}` },
+                              { separator: true, label: 'Hitung x' },
+                              { label: 'x = xc + a·cos(θ)', value: `${cXc} + ${ca} × ${t1s}` },
+                              { label: `x = ${cXc} + ${(ca * t1).toFixed(6)}`, value: `${selectedStep.x.toFixed(4)}`, highlight: true },
+                            ];
+                            yLines = [
+                              { label: 'Rumus', value: 'y = yc + b·sin(θ)' },
+                              { separator: true, label: 'Substitusi Parameter' },
+                              { label: 'yc', value: `${cYc}` },
+                              { label: 'b (semi-minor)', value: `${cb}` },
+                              { label: 'θ (radian)', value: `${psFmt} rad` },
+                              { label: 'θ (derajat) = θ × 180/π', value: `${psFmt} × 57.2958 = ${pDeg}°` },
+                              { separator: true, label: 'Hitung sin(θ)' },
+                              { label: `sin(${psFmt} rad) = sin(${pDeg}°)`, value: `${t2s}` },
+                              { separator: true, label: 'Hitung y' },
+                              { label: 'y = yc + b·sin(θ)', value: `${cYc} + ${cb} × ${t2s}` },
+                              { label: `y = ${cYc} + ${(cb * t2).toFixed(6)}`, value: `${selectedStep.y.toFixed(4)}`, highlight: true },
+                            ];
+                          } else if (curveType === 'parabola') {
+                            const fa = focusA;
+                            xLines = [
+                              { label: 'Rumus', value: 'x = xp + a·t²' },
+                              { separator: true, label: 'Substitusi Parameter' },
+                              { label: 'xp (vertex X)', value: `${cXc}` },
+                              { label: 'a (fokus)', value: `${fa}` },
+                              { label: 't (parameter)', value: `${ps}` },
+                              { separator: true, label: 'Hitung t²' },
+                              { label: `t² = ${ps} × ${ps}`, value: `${t2s}` },
+                              { separator: true, label: 'Hitung x' },
+                              { label: 'x = xp + a·t²', value: `${cXc} + ${fa} × ${t2s}` },
+                              { label: `x = ${cXc} + ${(fa * t2).toFixed(6)}`, value: `${selectedStep.x.toFixed(4)}`, highlight: true },
+                            ];
+                            yLines = [
+                              { label: 'Rumus', value: 'y = yp + 2a·t' },
+                              { separator: true, label: 'Substitusi Parameter' },
+                              { label: 'yp (vertex Y)', value: `${cYc}` },
+                              { label: '2a', value: `2 × ${fa} = ${2 * fa}` },
+                              { label: 't (parameter)', value: `${ps}` },
+                              { separator: true, label: 'Hitung y' },
+                              { label: 'y = yp + 2a·t', value: `${cYc} + ${2*fa} × ${ps}` },
+                              { label: `y = ${cYc} + ${(2 * fa * p).toFixed(6)}`, value: `${selectedStep.y.toFixed(4)}`, highlight: true },
+                            ];
+                          } else if (curveType === 'hiperbola') {
+                            const cosVal = Math.cos(p);
+                            xLines = [
+                              { label: 'Rumus', value: 'x = xc + a·sec(θ)' },
+                              { separator: true, label: 'Substitusi Parameter' },
+                              { label: 'xc', value: `${cXc}` },
+                              { label: 'a (transversal)', value: `${hA}` },
+                              { label: 'θ (radian)', value: `${psFmt} rad` },
+                              { label: 'θ (derajat) = θ × 180/π', value: `${psFmt} × 57.2958 = ${pDeg}°` },
+                              { separator: true, label: 'Hitung sec(θ)' },
+                              { label: `cos(${psFmt} rad) = cos(${pDeg}°)`, value: `${cosVal.toFixed(6)}` },
+                              { label: `sec(θ) = 1 / cos(θ) = 1 / ${cosVal.toFixed(6)}`, value: `${t1s}` },
+                              { separator: true, label: 'Hitung x' },
+                              { label: 'x = xc + a·sec(θ)', value: `${cXc} + ${hA} × ${t1s}` },
+                              { label: `x = ${cXc} + ${(hA * t1).toFixed(6)}`, value: `${selectedStep.x.toFixed(4)}`, highlight: true },
+                            ];
+                            yLines = [
+                              { label: 'Rumus', value: 'y = yc + b·tan(θ)' },
+                              { separator: true, label: 'Substitusi Parameter' },
+                              { label: 'yc', value: `${cYc}` },
+                              { label: 'b (konjugasi)', value: `${hB}` },
+                              { label: 'θ (radian)', value: `${psFmt} rad` },
+                              { label: 'θ (derajat) = θ × 180/π', value: `${psFmt} × 57.2958 = ${pDeg}°` },
+                              { separator: true, label: 'Hitung tan(θ)' },
+                              { label: `tan(${psFmt} rad) = tan(${pDeg}°)`, value: `${t2s}` },
+                              { separator: true, label: 'Hitung y' },
+                              { label: 'y = yc + b·tan(θ)', value: `${cYc} + ${hB} × ${t2s}` },
+                              { label: `y = ${cYc} + ${(hB * t2).toFixed(6)}`, value: `${selectedStep.y.toFixed(4)}`, highlight: true },
+                            ];
+                          }
+
+                          type LineItem = { label: string; value?: string; highlight?: boolean; separator?: boolean };
+                          const renderLines = (lines: LineItem[], title: string) => (
+                            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col gap-1">
+                              <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2 border-b border-gray-200 pb-2">
+                                {title}
+                              </div>
+                              {lines.map((line, i) =>
+                                line.separator ? (
+                                  <div key={i} className="text-[10px] font-bold uppercase tracking-widest text-palette-teal/60 mt-3 mb-1 border-t border-palette-sage/20 pt-2 font-sans">
+                                    {line.label}
+                                  </div>
+                                ) : (
+                                  <div key={i} className={`flex items-start justify-between gap-4 py-1 px-2 rounded ${line.highlight ? 'bg-palette-teal/10 border border-palette-teal/20 mt-1' : 'hover:bg-white'}`}>
+                                    <span className="text-gray-500 text-xs shrink-0 max-w-[55%]">{line.label}</span>
+                                    <span className={`text-right font-mono text-xs break-all ${line.highlight ? 'font-black text-[#1d4d52] text-sm' : 'text-gray-700'}`}>{line.value}</span>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          );
+
+                          return (
+                            <>
+                              {renderLines(xLines, 'Langkah Perhitungan Sumbu X')}
+                              {renderLines(yLines, 'Langkah Perhitungan Sumbu Y')}
+                            </>
+                          );
+                        })()}
                       </div>
                     )}
                   </div>

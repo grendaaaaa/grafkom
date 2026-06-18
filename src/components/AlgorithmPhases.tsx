@@ -62,11 +62,13 @@ export const AlgorithmPhases: React.FC<Props> = ({ currentPhase, curveType, algo
         <div>
           <h3 className={`font-black text-lg ${isRunning ? 'text-palette-teal' : 'text-gray-700'}`}>2. Iterasi</h3>
           <p className="text-sm mt-1.5 leading-relaxed font-medium text-gray-600">
-            {algorithmType === 'bresenham' && (curveType === 'lingkaran' || curveType === 'elips')
-              ? 'Loop hingga batas kuadran/oktan tercapai, lalu manfaatkan simetri.'
+            {algorithmType === 'bresenham' && curveType === 'lingkaran'
+              ? 'Loop berjalan dan iterasi berhenti ketika nilai x ≥ y (mencapai batas oktan 45°). Sisa kurva akan digambar memanfaatkan pencerminan simetri 8 arah.'
+              : algorithmType === 'bresenham' && curveType === 'elips'
+              ? 'Loop dibagi 2 area. Iterasi Region 1 berhenti saat kemiringan kurva berubah (2b²x ≥ 2a²y). Iterasi Region 2 dilanjutkan dan berhenti saat y < 0.'
               : curveType === 'parabola'
-                ? 'Loop dari t = tMin hingga tMax dengan langkah kecil Δt per iterasi.'
-                : 'Loop nilai sudut θ dengan langkah kecil Δθ per iterasi.'}
+                ? 'Loop berjalan dari t = tMin, dan iterasi berhenti saat parameter t melebihi batas tMax (dengan penambahan Δt tiap langkah).'
+                : 'Loop berjalan dengan penambahan sudut Δθ tiap langkah, dan iterasi berhenti saat sudut θ mencapai batas putaran (contoh: 2π untuk lingkaran utuh).'}
           </p>
         </div>
       </div>
