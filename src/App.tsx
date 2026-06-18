@@ -269,7 +269,6 @@ function App() {
                 hA={hA} setHA={setHA} hB={hB} setHB={setHB}
                 deltaTheta={deltaTheta} setDeltaTheta={setDeltaTheta}
                 curveType={curveType} setCurveType={handleCurveChange}
-                algorithmType={algorithmType} setAlgorithmType={handleAlgorithmTypeChange}
                 visMode={visMode} setVisMode={setVisMode}
                 onStart={handleStart} onPause={handlePause} onReset={handleReset}
                 onStepForward={handleStepForward} onStepBackward={handleStepBackward}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Play, RotateCcw, Pause, StepForward, StepBack, Cpu, FunctionSquare, X, HelpCircle } from 'lucide-react';
-import type { CurveType, VisualizationMode, AlgorithmType } from '../types';
+import { Play, RotateCcw, Pause, StepForward, StepBack, X, HelpCircle } from 'lucide-react';
+import type { CurveType, VisualizationMode } from '../types';
 
 interface ControlPanelProps {
   xc: string; setXc: (v: string) => void;
@@ -16,7 +16,6 @@ interface ControlPanelProps {
   hA: string; setHA: (v: string) => void;
   hB: string; setHB: (v: string) => void;
   deltaTheta: string; setDeltaTheta: (v: string) => void;
-  algorithmType: AlgorithmType; setAlgorithmType: (v: AlgorithmType) => void;
   curveType: CurveType; setCurveType: (v: CurveType) => void;
   visMode: VisualizationMode; setVisMode: (v: VisualizationMode) => void;
   onStart: () => void; onPause: () => void; onReset: () => void;
@@ -414,7 +413,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   focusA, setFocusA, tMin, setTMin, tMax, setTMax, deltaT, setDeltaT,
   hA, setHA, hB, setHB,
   deltaTheta, setDeltaTheta,
-  algorithmType, setAlgorithmType,
   curveType, setCurveType, visMode, setVisMode,
   onStart, onPause, onReset, onStepForward, onStepBackward,
   isRunning, isFinished,
