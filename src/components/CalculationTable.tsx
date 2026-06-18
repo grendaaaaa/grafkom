@@ -178,28 +178,6 @@ export const CalculationTable: React.FC<Props> = ({
     }
   }, [currentStepIndex, steps]);
 
-  const formulaLabel = (step: CalculationStep, curve: CurveType) => {
-    const { param: d, term1: x, term2: y, yComponent: branch } = step;
-    if (curve === "lingkaran") {
-      return branch === 0
-        ? `${d.toFixed(0)} + 4(${x}) + 6`
-        : `${d.toFixed(0)} + 4(${x} - ${y}) + 10`;
-    }
-    if (curve === "elips") {
-      const a2 = Math.round(a * a);
-      const b2 = Math.round(b * b);
-      // BUG-A1 FIX: tampilkan ekspresi simbolik "(x+1)" bukan substitusi angka
-      // agar konsisten dengan notasi rumus Bresenham standar
-      if (branch === 0) return `${d.toFixed(0)} + ${2 * b2}·(${x}+1) + ${b2}`;
-      if (branch === 1)
-        return `${d.toFixed(0)} + ${2 * b2}·(${x}+1) - ${2 * a2}·(${y}-1) + ${b2}`;
-      if (branch === 2) return `${d.toFixed(0)} - ${2 * a2}·(${y}-1) + ${a2}`;
-      if (branch === 3)
-        return `${d.toFixed(0)} + ${2 * b2}·(${x}+1) - ${2 * a2}·(${y}-1) + ${a2}`;
-    }
-    return "";
-  };
-
   const getSymmetryBreakdown = (
     p: Point,
     step: CalculationStep,
@@ -301,22 +279,6 @@ export const CalculationTable: React.FC<Props> = ({
       numbers: `(${xRes.numStr}, ${yRes.numStr})`,
       result: `(${p.x.toFixed(0)}, ${p.y.toFixed(0)})`,
     };
-  };
-
-
-
-  const getBresenhamFormulaName = (step: CalculationStep, curve: CurveType) => {
-    const { yComponent: branch } = step;
-    if (curve === 'lingkaran') {
-      return branch === 0 ? 'd += 4x + 6' : 'd += 4(x-y) + 10';
-    }
-    if (curve === 'elips') {
-      if (branch === 0) return 'd += 2b²(x+1) + b²';
-      if (branch === 1) return 'd += 2b²(x+1) - 2a²(y-1) + b²';
-      if (branch === 2) return 'd -= 2a²(y-1) + a²';
-      if (branch === 3) return 'd += 2b²(x+1) - 2a²(y-1) + a²';
-    }
-    return '';
   };
 
   return (
