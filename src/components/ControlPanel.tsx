@@ -503,15 +503,13 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             <input type="number" value={r} min="0.1"
               onChange={e => setR(e.target.value)} disabled={isRunning} className={inp} />
           </div>
-          {algorithmType === 'parametrik' && (
-            <div>
-              <label className="mb-1.5">
-                <FieldLabel paramKey="deltaTheta_lingkaran" onInfo={openInfo}>Delta Sudut (Δθ)</FieldLabel>
-              </label>
-              <input type="number" step="0.05" value={deltaTheta} min="0.001"
-                onChange={e => setDeltaTheta(e.target.value)} disabled={isRunning} className={inp} />
-            </div>
-          )}
+          <div>
+            <label className="mb-1.5">
+              <FieldLabel paramKey="deltaTheta_lingkaran" onInfo={openInfo}>Delta Sudut (Δθ)</FieldLabel>
+            </label>
+            <input type="number" step="0.05" value={deltaTheta} min="0.001"
+              onChange={e => setDeltaTheta(e.target.value)} disabled={isRunning} className={inp} />
+          </div>
         </>
       )}
 
@@ -535,15 +533,13 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             </div>
           </div>
           {Number(a) === Number(b) && <div className="text-xs font-bold text-palette-teal bg-palette-olive/30 px-3 py-2 rounded-lg">✓ a = b → Lingkaran sempurna</div>}
-          {algorithmType === 'parametrik' && (
-            <div>
-              <label className="mb-1.5">
-                <FieldLabel paramKey="deltaTheta_elips" onInfo={openInfo}>Delta Sudut (Δθ)</FieldLabel>
-              </label>
-              <input type="number" step="0.05" value={deltaTheta} min="0.001"
-                onChange={e => setDeltaTheta(e.target.value)} disabled={isRunning} className={inp} />
-            </div>
-          )}
+          <div>
+            <label className="mb-1.5">
+              <FieldLabel paramKey="deltaTheta_elips" onInfo={openInfo}>Delta Sudut (Δθ)</FieldLabel>
+            </label>
+            <input type="number" step="0.05" value={deltaTheta} min="0.001"
+              onChange={e => setDeltaTheta(e.target.value)} disabled={isRunning} className={inp} />
+          </div>
         </>
       )}
 
