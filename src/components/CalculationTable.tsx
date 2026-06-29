@@ -497,7 +497,13 @@ export const CalculationTable: React.FC<Props> = ({
                   <div className="w-px h-6 bg-white/20 mx-1"></div>
                   {/* Fit-screen toggle */}
                   <button
-                    onClick={() => setFitScreen(f => !f)}
+                    onClick={() => {
+                      setFitScreen(f => {
+                        const next = !f;
+                        if (next) setIsMaximized(true);
+                        return next;
+                      });
+                    }}
                     className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold transition-colors ${
                       fitScreen ? 'bg-yellow-400 text-[#1d4d52]' : 'bg-white/10 hover:bg-white/20'
                     }`}
@@ -507,7 +513,13 @@ export const CalculationTable: React.FC<Props> = ({
                   </button>
                   {/* Maximize toggle */}
                   <button
-                    onClick={() => setIsMaximized(m => !m)}
+                    onClick={() => {
+                      setIsMaximized(m => {
+                        const next = !m;
+                        if (!next) setFitScreen(false);
+                        return next;
+                      });
+                    }}
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors font-bold text-sm"
                     title={isMaximized ? 'Perkecil' : 'Perbesar (layar penuh)'}
                   >
