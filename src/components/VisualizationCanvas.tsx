@@ -202,9 +202,10 @@ export const VisualizationCanvas: React.FC<Props> = ({
           ctx.strokeStyle = '#1d4d52'; ctx.lineWidth = 1;
           ctx.strokeRect(mx(px) - gridSize / 2, my(py) - gridSize / 2, gridSize, gridSize);
           
-          if (gridSize > 22) {
+          if (gridSize > 12) {
+            const labelFs = Math.max(8, gridSize * 0.22);
             ctx.fillStyle = '#0f292b';
-            ctx.font = `bold ${gridSize * 0.22}px "JetBrains Mono", monospace`;
+            ctx.font = `bold ${labelFs}px "JetBrains Mono", monospace`;
             ctx.fillText(key, mx(px), my(py));
           }
         }
