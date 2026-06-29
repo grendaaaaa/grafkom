@@ -456,21 +456,21 @@ export const CalculationTable: React.FC<Props> = ({
           >
             <div
               className={`bg-[#f4f8f5] shadow-2xl border-2 border-palette-sage animate-in zoom-in-95 duration-200 flex flex-col transition-all overflow-hidden ${
-                isMaximized || fitScreen
+                isMaximized
                   ? 'fixed inset-4 rounded-3xl z-[101]'
                   : 'rounded-[2.5rem] w-full max-w-2xl max-h-[90vh]'
               }`}
               onClick={(e) => e.stopPropagation()}
             >
               <div className={`bg-palette-teal flex justify-between items-center text-white shrink-0 ${
-                fitScreen ? 'p-3' : 'p-5'
+                isMaximized ? 'p-3' : 'p-5'
               }`}>
                 <div>
-                  <h3 className={`font-black ${fitScreen ? 'text-sm' : 'text-lg'}`}>
+                  <h3 className={`font-black ${isMaximized ? 'text-sm' : 'text-lg'}`}>
                     Rincian Langkah #{selectedStep.iteration}
                   </h3>
                   <p className={`text-white/80 font-mono mt-0.5 bg-white/10 inline-block px-2 py-0.5 rounded ${
-                    fitScreen ? 'text-[10px]' : 'text-xs'
+                    isMaximized ? 'text-[10px]' : 'text-xs'
                   }`}>
                     {algorithmType === "bresenham"
                       ? branchLabel(selectedStep.yComponent, curveType)
@@ -525,7 +525,7 @@ export const CalculationTable: React.FC<Props> = ({
               </div>
 
               <div className={`flex-1 overflow-y-auto custom-scrollbar ${
-                fitScreen ? 'p-3 flex flex-col gap-3' : 'p-6 space-y-6'
+                isMaximized ? 'p-3 flex flex-col gap-3' : 'p-6 space-y-6'
               }`}
                 style={{ minHeight: 0 }}>
                 {/* Box 1: Kalkulasi d / Kalkulasi parametrik */}
