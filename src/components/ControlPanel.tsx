@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Play, RotateCcw, Pause, StepForward, StepBack, X, HelpCircle } from 'lucide-react';
-import type { CurveType, VisualizationMode } from '../types';
+import type { CurveType, VisualizationMode, AlgorithmType } from '../types';
 
 interface ControlPanelProps {
   xc: string; setXc: (v: string) => void;
@@ -21,6 +21,7 @@ interface ControlPanelProps {
   onStart: () => void; onPause: () => void; onReset: () => void;
   onStepForward: () => void; onStepBackward: () => void;
   isRunning: boolean; isFinished: boolean;
+  algorithmType: AlgorithmType; setAlgorithmType: (v: AlgorithmType) => void;
 }
 
 // ── Definisi penjelasan setiap parameter ───────────────────────────────────────
@@ -416,6 +417,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   curveType, setCurveType, visMode, setVisMode,
   onStart, onPause, onReset, onStepForward, onStepBackward,
   isRunning, isFinished,
+  algorithmType, setAlgorithmType,
 }) => {
   const [activeParamKey, setActiveParamKey] = React.useState<string | null>(null);
 
@@ -445,6 +447,32 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                     ? 'bg-white/50 border-palette-sage text-[#1d4d52] hover:bg-white hover:shadow'
                     : 'bg-gray-100/50 border-gray-200 text-gray-400 cursor-not-allowed opacity-60'}`}>
               {c.label}{!c.active && <span className="ml-1 text-xs opacity-70">(TBD)</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Pilihan Algoritma */}
+      <div>
+        <label className="block text-xs font-black mb-2 text-[#1d4d52] uppercase tracking-widest">Metode Algoritma</label>
+        <div className="grid grid-cols-2 gap-2.5">
+          {[
+            { key: 'parametrik', label: 'Parametrik', supported: true },
+            { key: 'bresenham', label: 'Bresenham', supported: curveType === 'lingkaran' || curveType === 'elips' },
+          ].map(algo => (
+            <button
+              key={algo.key}
+              disabled={isRunning || !algo.supported}
+              onClick={() => setAlgorithmType(algo.key as AlgorithmType)}
+              className={`p-2.5 rounded-xl border-2 font-bold transition-all duration-300 text-sm flex flex-col items-center justify-center gap-0.5
+                ${algorithmType === algo.key
+                  ? 'bg-palette-teal border-palette-teal text-white shadow-lg shadow-palette-teal/30 scale-[1.03]'
+                  : algo.supported
+                    ? 'bg-white/50 border-palette-sage text-[#1d4d52] hover:bg-white hover:shadow'
+                    : 'bg-gray-100/50 border-gray-200 text-gray-400 cursor-not-allowed opacity-60'}`}
+            >
+              <span>{algo.label}</span>
+              {!algo.supported && <span className="text-[9px] opacity-70 font-normal">(Hanya Lingkaran/Elips)</span>}
             </button>
           ))}
         </div>
