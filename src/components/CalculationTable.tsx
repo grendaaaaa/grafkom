@@ -40,43 +40,6 @@ export const CalculationTable: React.FC<Props> = ({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [steps]);
 
-
-  type LineItem = { label: string; value?: string; highlight?: boolean; separator?: boolean };
-
-  const renderLines = (lines: LineItem[], title: string) => (
-    <div className={`bg-gray-50 rounded-2xl border border-gray-100 flex flex-col overflow-y-auto ${
-      fitScreen ? 'p-2 gap-px' : 'p-4 gap-1'
-    }`}>
-      <div className={`text-gray-500 font-bold uppercase tracking-wider border-b border-gray-200 ${
-        fitScreen ? 'text-[9px] mb-1 pb-1' : 'text-xs mb-2 pb-2'
-      }`}>
-        {title}
-      </div>
-      {lines.map((line, i) =>
-        line.separator ? (
-          <div key={i} className={`font-bold uppercase tracking-widest text-palette-teal/60 border-t border-palette-sage/20 font-sans ${
-            fitScreen ? 'text-[8px] mt-1 mb-0.5 pt-1' : 'text-[10px] mt-3 mb-1 pt-2'
-          }`}>
-            {line.label}
-          </div>
-        ) : (
-          <div key={i} className={`flex items-start justify-between rounded ${
-            fitScreen ? 'gap-2 py-px px-1' : 'gap-4 py-1 px-2'
-          } ${line.highlight ? 'bg-palette-teal/10 border border-palette-teal/20 mt-0.5' : 'hover:bg-white'}`}>
-            <span className={`text-gray-500 shrink-0 ${
-              fitScreen ? 'text-[10px] max-w-[50%]' : 'text-xs max-w-[55%]'
-            }`}>{line.label}</span>
-            <span className={`text-right font-mono break-all ${
-              line.highlight
-                ? fitScreen ? 'font-black text-[#1d4d52] text-[11px]' : 'font-black text-[#1d4d52] text-sm'
-                : fitScreen ? 'text-gray-700 text-[10px]' : 'text-gray-700 text-xs'
-            }`}>{line.value}</span>
-          </div>
-        )
-      )}
-    </div>
-  );
-
   const headers = () => {
     // ── Bresenham headers ──────────────────────────────────
     if (algorithmType === "bresenham") {
@@ -168,15 +131,6 @@ export const CalculationTable: React.FC<Props> = ({
 
   const [selectedStep, setSelectedStep] =
     React.useState<CalculationStep | null>(null);
-
-  const [isMaximized, setIsMaximized] = React.useState(false);
-  const [fitScreen, setFitScreen] = React.useState(false);
-
-  // reset fit/maximize when step changes
-  React.useEffect(() => {
-    setFitScreen(false);
-    setIsMaximized(false);
-  }, [selectedStep]);
 
   // PBUG-3: Auto-close modal saat steps dikosongkan (misal setelah Reset)
   useEffect(() => {
@@ -499,23 +453,15 @@ export const CalculationTable: React.FC<Props> = ({
             onClick={() => setSelectedStep(null)}
           >
             <div
-              className={`bg-[#f4f8f5] shadow-2xl border-2 border-palette-sage animate-in zoom-in-95 duration-200 flex flex-col transition-all overflow-hidden ${
-                isMaximized || fitScreen
-                  ? 'fixed inset-4 rounded-3xl z-[101]'
-                  : 'rounded-[2.5rem] w-full max-w-2xl max-h-[90vh]'
-              }`}
+              className="bg-[#f4f8f5] rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border-2 border-palette-sage animate-in zoom-in-95 duration-200"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className={`bg-palette-teal flex justify-between items-center text-white shrink-0 ${
-                fitScreen ? 'p-3' : 'p-5'
-              }`}>
+              <div className="bg-palette-teal p-5 flex justify-between items-center text-white">
                 <div>
-                  <h3 className={`font-black ${fitScreen ? 'text-sm' : 'text-lg'}`}>
+                  <h3 className="font-black text-lg">
                     Rincian Langkah #{selectedStep.iteration}
                   </h3>
-                  <p className={`text-white/80 font-mono mt-0.5 bg-white/10 inline-block px-2 py-0.5 rounded ${
-                    fitScreen ? 'text-[10px]' : 'text-xs'
-                  }`}>
+                  <p className="text-xs text-white/80 font-mono mt-1 bg-white/10 inline-block px-2 py-0.5 rounded">
                     {algorithmType === "bresenham"
                       ? branchLabel(selectedStep.yComponent, curveType)
                       : "Parametrik"}
@@ -539,25 +485,6 @@ export const CalculationTable: React.FC<Props> = ({
                     ❯
                   </button>
                   <div className="w-px h-6 bg-white/20 mx-1"></div>
-                  {/* Fit-screen toggle */}
-                  <button
-                    onClick={() => setFitScreen(f => !f)}
-                    className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold transition-colors ${
-                      fitScreen ? 'bg-yellow-400 text-[#1d4d52]' : 'bg-white/10 hover:bg-white/20'
-                    }`}
-                    title={fitScreen ? 'Mode scroll (normal)' : 'Tampilkan semua tanpa scroll'}
-                  >
-                    {fitScreen ? '⊟' : '⊞'}
-                  </button>
-                  {/* Maximize toggle */}
-                  <button
-                    onClick={() => setIsMaximized(m => !m)}
-                    className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors font-bold text-sm"
-                    title={isMaximized ? 'Perkecil' : 'Perbesar (layar penuh)'}
-                  >
-                    {isMaximized ? '⊡' : '⊠'}
-                  </button>
-                  <div className="w-px h-6 bg-white/20 mx-1"></div>
                   <button
                     onClick={() => setSelectedStep(null)}
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500/80 hover:bg-red-500 transition-colors font-bold"
@@ -568,20 +495,13 @@ export const CalculationTable: React.FC<Props> = ({
                 </div>
               </div>
 
-              <div className={`flex-1 overflow-y-auto custom-scrollbar ${
-                fitScreen ? 'p-3 flex flex-col gap-3' : 'p-6 space-y-6'
-              }`}
-                style={{ minHeight: 0 }}>
+              <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
                 {/* Box 1: Kalkulasi d / Kalkulasi parametrik */}
-                <div className={fitScreen ? 'space-y-1' : 'space-y-2'}>
-                  <h4 className={`font-bold uppercase tracking-wider text-palette-teal ${
-                    fitScreen ? 'text-[9px]' : 'text-xs'
-                  }`}>
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-palette-teal">
                     Kalkulasi Formula
                   </h4>
-                  <div className={`bg-white rounded-2xl border border-palette-sage/50 font-mono text-sm ${
-                    fitScreen ? 'p-2 space-y-1' : 'p-4 space-y-2'
-                  }`}>
+                  <div className="bg-white p-4 rounded-xl border border-palette-sage/50 font-mono text-sm space-y-2">
                     {algorithmType === "bresenham" ? (
                       (() => {
                         const x0 = Math.round(selectedStep.term1);
@@ -815,11 +735,32 @@ export const CalculationTable: React.FC<Props> = ({
                             ];
                           }
 
+                          type LineItem = { label: string; value?: string; highlight?: boolean; separator?: boolean };
+                          const renderLines = (lines: LineItem[], title: string) => (
+                            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col gap-1">
+                              <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2 border-b border-gray-200 pb-2">
+                                {title}
+                              </div>
+                              {lines.map((line, i) =>
+                                line.separator ? (
+                                  <div key={i} className="text-[10px] font-bold uppercase tracking-widest text-palette-teal/60 mt-3 mb-1 border-t border-palette-sage/20 pt-2 font-sans">
+                                    {line.label}
+                                  </div>
+                                ) : (
+                                  <div key={i} className={`flex items-start justify-between gap-4 py-1 px-2 rounded ${line.highlight ? 'bg-palette-teal/10 border border-palette-teal/20 mt-1' : 'hover:bg-white'}`}>
+                                    <span className="text-gray-500 text-xs shrink-0 max-w-[55%]">{line.label}</span>
+                                    <span className={`text-right font-mono text-xs break-all ${line.highlight ? 'font-black text-[#1d4d52] text-sm' : 'text-gray-700'}`}>{line.value}</span>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          );
+
                           return (
-                            <div className={fitScreen ? 'grid grid-cols-2 gap-2' : 'space-y-4'}>
+                            <>
                               {renderLines(xLines, 'Langkah Perhitungan Sumbu X')}
                               {renderLines(yLines, 'Langkah Perhitungan Sumbu Y')}
-                            </div>
+                            </>
                           );
                         })()}
                       </div>
@@ -828,15 +769,11 @@ export const CalculationTable: React.FC<Props> = ({
                 </div>
 
                 {/* Box 2: Titik Plot (Symmetry) */}
-                <div className={fitScreen ? 'space-y-1' : 'space-y-2'}>
-                  <h4 className={`font-bold uppercase tracking-wider text-palette-teal ${
-                    fitScreen ? 'text-[9px]' : 'text-xs'
-                  }`}>
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-palette-teal">
                     Rincian Titik yang Digambar
                   </h4>
-                  <div className={`bg-white rounded-2xl border border-palette-sage/50 font-mono text-sm ${
-                    fitScreen ? 'p-2' : 'p-4'
-                  }`}>
+                  <div className="bg-white p-4 rounded-xl border border-palette-sage/50 font-mono text-sm">
                     {algorithmType === "bresenham" ? (
                       <>
                         <div className="mb-4 bg-palette-teal/5 border border-palette-teal/20 px-3 py-2 rounded-lg text-xs flex flex-col sm:flex-row sm:items-center justify-between">

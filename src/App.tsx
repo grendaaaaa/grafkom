@@ -191,9 +191,7 @@ function App() {
     if (type === 'parabola' || type === 'hiperbola') setAlgorithmType('parametrik');
   }, [handleReset]);
 
-  const handleAlgorithmTypeChange = useCallback((type: AlgorithmType) => {
-    handleReset(); setAlgorithmType(type);
-  }, [handleReset]);
+
 
   return (
     <div className="min-h-screen text-[#1d4d52] p-4 md:p-8 font-sans relative">
@@ -273,7 +271,6 @@ function App() {
                 onStart={handleStart} onPause={handlePause} onReset={handleReset}
                 onStepForward={handleStepForward} onStepBackward={handleStepBackward}
                 isRunning={isRunning} isFinished={isFinished}
-                algorithmType={algorithmType} setAlgorithmType={handleAlgorithmTypeChange}
               />
             </div>
             <div className="glass-panel rounded-[2rem] overflow-hidden border border-white/60 shadow-[0_15px_40px_-15px_rgba(125,167,140,0.6)] hover:shadow-[0_20px_50px_-15px_rgba(125,167,140,0.8)] hover:-translate-y-1 transition-all">
