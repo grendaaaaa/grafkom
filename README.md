@@ -1,73 +1,95 @@
-# React + TypeScript + Vite
+<div align="center">
+  <h1>Kalkulator & Visualisasi Algoritma Kurva</h1>
+  <p><i>Aplikasi web interaktif untuk analisis performa pembentukan kurva parametrik dalam grafika komputer.</i></p>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+  ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+  ![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)
+</div>
 
-Currently, two official plugins are available:
+<br />
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Aplikasi ini tidak sekadar menggambar kurva, tetapi membedah proses komputasi yang terjadi di balik layar. Mulai dari perhitungan fungsi trigonometri hingga pembentukan koordinat _pixel-by-pixel_. Sangat cocok untuk eksplorasi optimasi dan performa *rendering*.
 
-## React Compiler
+## Fitur Utama
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Visualisasi Komprehensif:** Mendukung pembentukan 4 tipe konik utama: `Lingkaran`, `Elips`, `Parabola`, dan `Hiperbola`.
+- **Render Berbasis Real-time:** Memanfaatkan keandalan Canvas HTML5 untuk rendering responsif berkecepatan tinggi.
+- **Transparansi Kalkulasi:** Menampilkan log kalkulasi iteratif (nilai $x$ dan $y$ persis seperti yang dihitung oleh memori).
+- **Resolusi Masalah Floating-Point:** Mengimplementasikan pendekatan _integer-based logic_ demi memastikan penutupan kurva (*curve closing*) sempurna tanpa *drift* presisi desimal JavaScript.
+- **Sistem Pengujian Toleransi Performa:** Dilengkapi dengan modul *testing* skrip lokal berbasis Node.js yang mengukur persentase keseimbangan kualitas visual vs batas ambang operasi.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Analisis Performa (*Performance Trade-Off*)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Menurunkan parameter resolusi (*delta*) memang membuat kurva tampak sempurna. Namun, di balik itu, beban kerja CPU melesat karena operasi trigonometri dan aljabar. 
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Skrip penguji (`src/tests/tradeoff.ts`) menggunakan metode pendekatan batas maksimal *budget* operasi (*Target-based Threshold*). Kami memberikan limit **300 operasi aritmatika per kurva** lalu mencari nilai resolusi terhalus (*delta optimal*) yang mungkin dicapai.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Temuan *Delta* Berdasarkan Batas Beban (Maks: 300 op)
+
+| Spesifikasi Kurva | Delta Optimal | Kuantitas Iterasi | Beban Operasi (op) | Rata-rata Beban Eksekusi (ms per 10k loop) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Lingkaran** | `0.045` | 141 titik | 282 | ~80 ms |
+| **Elips** | `0.045` | 141 titik | 282 | ~76 ms |
+| **Parabola** | `0.205` | 99 titik | 297 | ~29 ms |
+| **Hiperbola** | `0.060` | 99 titik | 297 | ~79 ms |
+
+> **Catatan Analisis Kompleksitas:** Lingkaran dan Elips menggunakan 2 op/titik (`cos`, `sin`). Parabola memakan 3 op/titik berbasis fungsi kuadrat. Sementara Hiperbola memakai 3 op/titik khusus (`cos`, `secant` via pembagian, `tan`).
+
+---
+
+## Panduan Instalasi Lokal
+
+Persyaratan Utama: Pastikan Node.js v18+ terinstal di sistem Anda.
+
+```bash
+# 1. Klon repositori ke mesin lokal Anda
+git clone <url-repositori-anda>
+
+# 2. Unduh semua modul dependensi
+npm install
+
+# 3. Jalankan server lokal dalam mode pengembangan
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Buka aplikasi melalui tautan `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+<details>
+<summary><b>Klik untuk melihat Struktur Direktori (Folder Structure)</b></summary>
+<br />
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+grafkom/
+├── src/
+│   ├── algorithms/       # Logika matematika murni terisolasi
+│   │   ├── circle.ts     
+│   │   ├── ellipse.ts    
+│   │   ├── hyperbola.ts  
+│   │   └── parabola.ts   
+│   ├── components/       # Interface berbasis komponen React
+│   │   ├── AlgorithmPhases.tsx     
+│   │   ├── CalculationTable.tsx    
+│   │   ├── ControlPanel.tsx        
+│   │   └── VisualizationCanvas.tsx 
+│   ├── tests/
+│   │   └── tradeoff.ts   # Script evaluasi limit komputasi 
+│   ├── App.tsx           
+│   └── main.tsx          
+├── package.json          
+├── vite.config.ts        
+└── tsconfig.json         
 ```
+</details>
+
+## Panduan Pengujian Terminal (*Benchmark*)
+
+Modul pengujian yang digunakan untuk mengambil data pada tabel analisis di atas dapat Anda jalankan ulang atau kustomisasi nilai *budget*-nya sendiri.
+
+Jalankan perintah ini:
+```bash
+npx tsx src/tests/tradeoff.ts
+```
+Papan hasil rekapitulasi waktu kalkulasi performa (*millisecond*) akan tercetak di layar terminal Anda seketika.
